@@ -11,16 +11,16 @@
   - [x] react-dnd and react-dnd-html5-backend
   - [x] vitest and testing-library
 - [x] Create base App component with header
-- [ ] Set up initial test for App component
+- [x] Set up initial test for App component
 
 ### Core State Management
-- [ ] Create CounterpointContext.tsx
-  - [ ] Define types for cantus firmus notes, counterpoint notes, and history
-  - [ ] Implement context provider component
-  - [ ] Set up state for cantus firmus, counterpoint, species, and history
-  - [ ] Add basic state update functions
-- [ ] Update App.tsx to use context provider
-- [ ] Create tests for context functionality
+- [x] Create CounterpointContext.tsx
+  - [x] Define types for cantus firmus notes, counterpoint notes, and history
+  - [x] Implement context provider component
+  - [x] Set up state for cantus firmus, counterpoint, species, and history
+  - [x] Add basic state update functions
+- [x] Update App.tsx to use context provider
+- [x] Create tests for context functionality
 
 ### Basic UI Layout
 - [ ] Create MainLayout component
