@@ -1,4 +1,4 @@
-import { Close } from "@mui/icons-material";
+import CloseIcon from "@mui/icons-material/Close";
 import { Alert, Box, IconButton, Typography } from "@mui/material";
 
 interface StatusBarProps {
@@ -34,7 +34,7 @@ function StatusBar({
           size="small"
           onClick={onClear}
         >
-          <Close fontSize="inherit" />
+          <CloseIcon fontSize="inherit" />
         </IconButton>
       }
       sx={{ width: "100%" }}

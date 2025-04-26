@@ -1,4 +1,4 @@
-import { MusicNote } from "@mui/icons-material";
+import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import { Box, Typography, useTheme } from "@mui/material";
 
 function Header() {
@@ -6,7 +6,7 @@ function Header() {
 
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-      <MusicNote fontSize="large" color="primary" />
+      <MusicNoteIcon fontSize="large" color="primary" />
       <Typography
         variant="h4"
         component="h1"

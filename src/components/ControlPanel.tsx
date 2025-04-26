@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { useCounterpoint } from "../hooks";
 import { Species } from "../types";
-import { PlayArrow, Stop, RestartAlt, Undo } from "@mui/icons-material";
+import PlayIcon from "@mui/icons-material/PlayArrow"
+import StopIcon from "@mui/icons-material/Stop"
+import RestartIcon from "@mui/icons-material/RestartAlt";
+import UndoIcon from "@mui/icons-material/Undo"
 import {
   Box,
   Button,
@@ -95,7 +98,7 @@ function ControlPanel({ onPlay, onStop, onReset }: ControlPanelProps) {
             <Button
               variant="contained"
               color={isPlaying ? "error" : "primary"}
-              startIcon={isPlaying ? <Stop /> : <PlayArrow />}
+              startIcon={isPlaying ? <StopIcon /> : <PlayIcon />}
               onClick={handlePlayToggle}
               fullWidth
             >
@@ -105,7 +108,7 @@ function ControlPanel({ onPlay, onStop, onReset }: ControlPanelProps) {
             <Button
               variant="outlined"
               color="secondary"
-              startIcon={<RestartAlt />}
+              startIcon={<RestartIcon />}
               onClick={handleReset}
               fullWidth
             >
@@ -130,7 +133,7 @@ function ControlPanel({ onPlay, onStop, onReset }: ControlPanelProps) {
             <Button
               variant="outlined"
               color="primary"
-              startIcon={<Undo />}
+              startIcon={<UndoIcon />}
               onClick={handleUndo}
               disabled={!canUndo}
               sx={{ ml: 2 }}
