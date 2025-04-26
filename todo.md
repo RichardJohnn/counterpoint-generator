@@ -31,7 +31,7 @@
 - [x] Create StaffContainer component (placeholder)
 - [x] Create StatusBar component
 - [x] Style all components with CSS
-- [ ] Write tests for each component
+- [x] Write tests for each component
 
 ## Phase 2: Musical Staff Rendering
 
