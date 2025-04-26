@@ -23,14 +23,14 @@
 - [x] Create tests for context functionality
 
 ### Basic UI Layout
-- [ ] Create MainLayout component
-- [ ] Create ControlPanel component
-  - [ ] Add species selection dropdown (1-5)
-  - [ ] Add placeholder buttons for playback and reset
-  - [ ] Add toggle for counterpoint placement (above/below)
-- [ ] Create StaffContainer component (placeholder)
-- [ ] Create StatusBar component
-- [ ] Style all components with CSS
+- [x] Create MainLayout component
+- [x] Create ControlPanel component
+  - [x] Add species selection dropdown (1-5)
+  - [x] Add placeholder buttons for playback and reset
+  - [x] Add toggle for counterpoint placement (above/below)
+- [x] Create StaffContainer component (placeholder)
+- [x] Create StatusBar component
+- [x] Style all components with CSS
 - [ ] Write tests for each component
 
 ## Phase 2: Musical Staff Rendering
