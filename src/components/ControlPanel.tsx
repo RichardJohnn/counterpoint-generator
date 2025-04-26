@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Species, useCounterpoint } from "../context/CounterpointContext";
+import { useCounterpoint } from "../hooks";
+import { Species } from "../types";
 import { PlayArrow, Stop, RestartAlt, Undo } from "@mui/icons-material";
 import {
   Box,

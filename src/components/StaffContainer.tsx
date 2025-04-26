@@ -1,5 +1,5 @@
 import { Box, Paper, Typography } from "@mui/material";
-import { useCounterpoint } from "../context/CounterpointContext";
+import { useCounterpoint } from "../hooks";
 
 function StaffContainer() {
   const { cantusFirmus, counterpoint, selectedSpecies, isCounterpointAbove } =

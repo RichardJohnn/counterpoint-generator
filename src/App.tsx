@@ -6,7 +6,7 @@ import Header from "./components/Header";
 import ControlPanel from "./components/ControlPanel";
 import StaffContainer from "./components/StaffContainer";
 import StatusBar from "./components/StatusBar";
-import { CounterpointProvider } from "./context/CounterpointContext";
+import { CounterpointProvider } from "./context";
 
 function App() {
   const [statusMessage, setStatusMessage] = useState("");

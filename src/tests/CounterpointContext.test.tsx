@@ -1,21 +1,20 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import {
-  CounterpointProvider,
-  useCounterpoint,
-  Note,
-  Species,
-} from "../context/CounterpointContext";
+import { CounterpointProvider } from "../context";
+import { useCounterpoint } from "../hooks";
+import { Note, Species } from "../types";
 
 const TestComponent = () => {
   const {
     cantusFirmus,
     counterpoint,
     selectedSpecies,
+    isCounterpointAbove,
     history,
     setCantusFirmus,
     setCounterpoint,
     setSpecies,
+    setPosition,
     addToHistory,
     undo,
   } = useCounterpoint();
@@ -32,6 +31,7 @@ const TestComponent = () => {
       <div data-testid="cantus-firmus">{JSON.stringify(cantusFirmus)}</div>
       <div data-testid="counterpoint">{JSON.stringify(counterpoint)}</div>
       <div data-testid="species">{selectedSpecies}</div>
+      <div data-testid="position">{JSON.stringify(isCounterpointAbove)}</div>
       <div data-testid="history-length">{history.length}</div>
 
       <button
@@ -64,6 +64,12 @@ const TestComponent = () => {
       >
         Set Species to 2
       </button>
+      <button
+        data-testid="set-position"
+        onClick={() => setPosition(false)}
+      >
+        Set Counterpoint Position
+      </button>
       <button data-testid="add-to-history" onClick={addToHistory}>
         Add To History
       </button>
@@ -91,6 +97,7 @@ describe("CounterpointContext", () => {
     expect(screen.getByTestId("cantus-firmus")).toHaveTextContent("[]");
     expect(screen.getByTestId("counterpoint")).toHaveTextContent("[]");
     expect(screen.getByTestId("species")).toHaveTextContent("1");
+    expect(screen.getByTestId("position")).toHaveTextContent("true");
     expect(screen.getByTestId("history-length")).toHaveTextContent("0");
   });
 
@@ -121,6 +128,12 @@ describe("CounterpointContext", () => {
 
     expect(screen.getByTestId("species")).toHaveTextContent("2");
   });
+
+  it("should update counterpoint position", () => {
+    fireEvent.click(screen.getByTestId("set-position"));
+
+    expect(screen.getByTestId("position")).toHaveTextContent("false");
+  })
 
   it("should add to history", () => {
     fireEvent.click(screen.getByTestId("set-cantus-firmus"));
