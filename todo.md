@@ -36,15 +36,15 @@
 ## Phase 2: Musical Staff Rendering
 
 ### VexFlow Integration
-- [ ] Create MusicStaff component
-  - [ ] Add props for clef type and staff width
-  - [ ] Implement VexFlow rendering
-  - [ ] Add support for multiple measures
-  - [ ] Add time and key signature support
-- [ ] Update StaffContainer to use MusicStaff
-- [ ] Create useVexFlowContext hook for VexFlow initialization
-- [ ] Add resizing support
-- [ ] Write tests for MusicStaff rendering
+- [x] Create MusicStaff component
+  - [x] Add props for clef type and staff width
+  - [x] Implement VexFlow rendering
+  - [ ] Add support for multiple measures (Deferred to next step)
+  - [x] Add time and key signature support
+- [x] Update StaffContainer to use MusicStaff
+- [x] Create useVexFlowContext hook for VexFlow initialization
+- [x] Add resizing support
+- [x] Write tests for MusicStaff rendering
 
 ### Rendering Notes on the Staff
 - [ ] Update MusicStaff to accept note array
