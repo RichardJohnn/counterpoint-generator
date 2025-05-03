@@ -1,11 +1,13 @@
 import { Box, Paper, Typography } from "@mui/material";
 import { useCounterpoint } from "../hooks";
+import MusicStaff from "./MusicStaff";
 
 function StaffContainer() {
   const { cantusFirmus, counterpoint, selectedSpecies, isCounterpointAbove } =
     useCounterpoint();
 
-  const hasNotes = cantusFirmus.length > 0 || counterpoint.length > 0;
+  // const hasNotes = cantusFirmus.length > 0 || counterpoint.length > 0;
+  const hasNotes = true;
 
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -28,46 +30,7 @@ function StaffContainer() {
         }}
       >
         {hasNotes ? (
-          <>
-            <Box
-              sx={{
-                width: "100%",
-                height: "40%",
-                border: "1px dashed #ccc",
-                mb: 2,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                {isCounterpointAbove ? "Counterpoint Line" : "Cantus Firmus"} (
-                {isCounterpointAbove
-                  ? counterpoint.length
-                  : cantusFirmus.length}{" "}
-                notes)
-              </Typography>
-            </Box>
-
-            <Box
-              sx={{
-                width: "100%",
-                height: "40%",
-                border: "1px dashed #ccc",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                {isCounterpointAbove ? "Cantus Firmus" : "Counterpoint Line"} (
-                {isCounterpointAbove
-                  ? cantusFirmus.length
-                  : counterpoint.length}{" "}
-                notes)
-              </Typography>
-            </Box>
-          </>
+          <MusicStaff />
         ) : (
           <Typography
             variant="body1"
