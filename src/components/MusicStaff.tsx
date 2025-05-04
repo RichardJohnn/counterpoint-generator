@@ -1,20 +1,25 @@
 import { Box } from "@mui/material";
 import { useCallback, useEffect } from "react";
 import { useVexFlowContext } from "../hooks";
-import { drawStaves } from "../utils";
+import { renderMusicStaff } from "../utils";
+import { Note } from "../types";
 
 interface MusicStaffProps {
+  notes?: Note[];
   trebleClef?: string;
   bassClef?: string;
   timeSignature?: string;
   staffDistance?: number;
+  isCounterpointAbove?: boolean;
 }
 
 function MusicStaff({
+  notes = [],
   trebleClef = "treble",
-  bassClef = "bass",
+  bassClef = "treble",
   timeSignature = "C",
   staffDistance = 150,
+  isCounterpointAbove = true
 }: MusicStaffProps) {
   const { containerRef, initialize, getContext } = useVexFlowContext();
 
@@ -24,22 +29,27 @@ function MusicStaff({
     initialize(containerRef.current);
     const context = getContext();
     if (context) {
-      drawStaves(context, {
+      renderMusicStaff(context, {
         width: containerRef.current.clientWidth,
+        // height: containerRef.current.clientHeight,
+        notes,
         trebleClef,
         bassClef,
         timeSignature,
         staffDistance,
-      });
+        isCounterpointAbove
+      })
     }
   }, [
     containerRef,
     initialize,
     getContext,
+    notes,
     trebleClef,
     bassClef,
     timeSignature,
     staffDistance,
+    isCounterpointAbove
   ]);
 
   useEffect(() => {

@@ -1,8 +1,12 @@
 export interface Note {
   pitch: string; // e.g., "C4"
-  duration: number; // whole note = 1, half note = 0.5, etc.
-  measure: number; // which measure the note belongs to
-  position: number; // position within measure (0-based)
+  duration: "w" | "h" | "q" | "8" | "16"; //
+  // measure: number; // which measure the note belongs to
+  // position: number; // position within measure (0-based)
+}
+
+export interface Measure {
+  notes: Note[];
 }
 
 export type Species = 1 | 2 | 3 | 4 | 5;

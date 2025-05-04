@@ -20,7 +20,7 @@ vi.mock("../utils", async () => {
   const actual = await vi.importActual("../utils");
   return {
     ...actual,
-    drawStaves: vi.fn(),
+    renderMusicStaff: vi.fn(),
   };
 });
 
@@ -74,11 +74,11 @@ describe("Music Staff Component", () => {
   it("initializes with default props", () => {
     render(<MusicStaff />);
 
-    expect(utils.drawStaves).toHaveBeenCalledWith(
+    expect(utils.renderMusicStaff).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
         trebleClef: "treble",
-        bassClef: "bass",
+        bassClef: "treble",
         timeSignature: "C",
       })
     );
@@ -94,7 +94,7 @@ describe("Music Staff Component", () => {
       />
     );
 
-    expect(utils.drawStaves).toHaveBeenCalledWith(
+    expect(utils.renderMusicStaff).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
         trebleClef: "alto",
@@ -114,6 +114,6 @@ describe("Music Staff Component", () => {
     window.innerHeight = 400;
     window.dispatchEvent(new Event("resize"));
 
-    expect(utils.drawStaves).toHaveBeenCalled();
+    expect(utils.renderMusicStaff).toHaveBeenCalled();
   });
 });
