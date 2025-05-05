@@ -9,6 +9,12 @@ export interface Measure {
   notes: Note[];
 }
 
+export type TimeSignature = string | "C" | "C|";
+
+export type NoteDurationMap = {
+  [key: string]: number;
+};
+
 export type Species = 1 | 2 | 3 | 4 | 5;
 
 export interface CounterpointState {
