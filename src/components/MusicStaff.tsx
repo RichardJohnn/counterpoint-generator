@@ -5,7 +5,8 @@ import { renderMusicStaff } from "../utils";
 import { Note } from "../types";
 
 interface MusicStaffProps {
-  notes?: Note[];
+  cantusFirmusNotes?: Note[];
+  counterpointNotes?: Note[];
   trebleClef?: string;
   bassClef?: string;
   timeSignature?: string;
@@ -14,7 +15,8 @@ interface MusicStaffProps {
 }
 
 function MusicStaff({
-  notes = [],
+  cantusFirmusNotes = [],
+  counterpointNotes = [],
   trebleClef = "treble",
   bassClef = "treble",
   timeSignature = "C",
@@ -32,7 +34,8 @@ function MusicStaff({
       renderMusicStaff(context, {
         width: containerRef.current.clientWidth,
         // height: containerRef.current.clientHeight,
-        notes,
+        cantusFirmusNotes,
+        counterpointNotes,
         trebleClef,
         bassClef,
         timeSignature,
@@ -44,7 +47,8 @@ function MusicStaff({
     containerRef,
     initialize,
     getContext,
-    notes,
+    cantusFirmusNotes,
+    counterpointNotes,
     trebleClef,
     bassClef,
     timeSignature,

@@ -45,7 +45,7 @@ function StaffContainer() {
         }}
       >
         {hasNotes ? (
-          <MusicStaff notes={defaultCantusFirmus} isCounterpointAbove={isCounterpointAbove}/>
+          <MusicStaff cantusFirmusNotes={cantusFirmus} counterpointNotes={counterpoint} isCounterpointAbove={isCounterpointAbove}/>
         ) : (
           <Typography
             variant="body1"

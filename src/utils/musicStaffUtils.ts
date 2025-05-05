@@ -1,4 +1,10 @@
-import { Stave, RenderContext, Voice, Formatter } from "vexflow";
+import {
+  Stave,
+  RenderContext,
+  Voice,
+  Formatter,
+  StaveConnector,
+} from "vexflow";
 import { Measure, Note } from "../types";
 import { createVexFlowNote, organizeNotesIntoMeasures } from "./musicTheory";
 
@@ -62,11 +68,12 @@ export function drawMeasure(
 
   return stave;
 }
+
 export function renderNotes(
   context: RenderContext,
   stave: Stave,
   notes: Note[],
-  clef="treble"
+  clef = "treble"
 ) {
   if (notes.length === 0) return;
 
@@ -99,7 +106,10 @@ export function renderMeasures(
   const { startX, y, width, clef = "treble", timeSignature = "C" } = options;
 
   const clefAndTimeSignatureWidth = 60;
-  const measureWidth = measures.length > 1 ? (width - clefAndTimeSignatureWidth) / measures.length : width - clefAndTimeSignatureWidth;
+  const measureWidth =
+    measures.length > 1
+      ? (width - clefAndTimeSignatureWidth) / measures.length
+      : width - clefAndTimeSignatureWidth;
 
   measures.forEach((measure, index) => {
     let measureX, currentMeasureWidth;
@@ -125,12 +135,71 @@ export function renderMeasures(
   });
 }
 
+export function connectStaves(
+  context: RenderContext,
+  options: {
+    startX: number;
+    trebleY: number;
+    bassY: number;
+    width: number;
+    measureCount: number;
+  }
+) {
+  const { startX, trebleY, bassY, width, measureCount } = options;
+
+  const clefAndTimeSignatureWidth = 60;
+  const measureWidth =
+    measureCount > 1
+      ? (width - clefAndTimeSignatureWidth) / measureCount
+      : width - clefAndTimeSignatureWidth;
+
+  const trebleStartStave = new Stave(startX, trebleY, 1);
+  const bassStartStave = new Stave(startX, bassY, 1);
+
+  new StaveConnector(trebleStartStave, bassStartStave)
+    .setType(StaveConnector.typeString.bracket)
+    .setContext(context)
+    .draw();
+
+  new StaveConnector(trebleStartStave, bassStartStave)
+    .setType(StaveConnector.typeString.singleLeft)
+    .setContext(context)
+    .draw();
+
+  const endX = startX + width;
+  const trebleEndStave = new Stave(endX - 1, trebleY, 1);
+  const bassEndStave = new Stave(endX - 1, bassY, 1);
+
+  new StaveConnector(trebleEndStave, bassEndStave)
+    .setType(StaveConnector.typeString.boldDoubleRight)
+    .setContext(context)
+    .draw();
+
+  for (let i = 1; i < measureCount; i++) {
+    let x;
+    if (i === 1) {
+      x = startX + clefAndTimeSignatureWidth + measureWidth;
+    } else {
+      x = startX + clefAndTimeSignatureWidth + i * measureWidth;
+    }
+
+    const trebleMeasureStave = new Stave(x, trebleY, 1);
+    const bassMeasureStave = new Stave(x, bassY, 1);
+
+    new StaveConnector(trebleMeasureStave, bassMeasureStave)
+      .setType(StaveConnector.typeString.single)
+      .setContext(context)
+      .draw();
+  }
+}
+
 export function renderMusicStaff(
   context: RenderContext,
   options: {
     width: number;
     // height: number;
-    notes: Note[];
+    cantusFirmusNotes: Note[];
+    counterpointNotes: Note[];
     trebleClef?: string;
     bassClef?: string;
     timeSignature?: string;
@@ -141,16 +210,24 @@ export function renderMusicStaff(
   const {
     width,
     // height,
-    notes,
+    cantusFirmusNotes,
+    counterpointNotes,
     trebleClef = "treble",
     bassClef = "bass",
     timeSignature = "C",
     staffDistance = 150,
-    isCounterpointAbove = true
+    isCounterpointAbove = true,
   } = options;
-  const measures = organizeNotesIntoMeasures(notes, timeSignature);
+  const cantusFirmusMeasures = organizeNotesIntoMeasures(
+    cantusFirmusNotes,
+    timeSignature
+  );
+  const counterpointMeasures = organizeNotesIntoMeasures(
+    counterpointNotes,
+    timeSignature
+  );
 
-  if (measures.length === 0) {
+  if (cantusFirmusMeasures.length === 0) {
     drawStaves(context, {
       width,
       trebleClef,
@@ -158,46 +235,64 @@ export function renderMusicStaff(
       timeSignature,
       staffDistance,
     });
+
+    connectStaves(context, {
+      startX: 10,
+      trebleY: 20,
+      bassY: 20 + staffDistance,
+      width: width - 20,
+      measureCount: 8,
+    });
   } else {
-    const emptyMeasures = measures.map(() => ({ notes: [] }));
+    const emptyMeasures = cantusFirmusMeasures.map(() => ({ notes: [] }));
+    const counterpointLine =
+      counterpointMeasures.length === 0 ? emptyMeasures : counterpointMeasures;
 
     const startX = 10;
-    const trebleY = 40;
+    const trebleY = 20;
     const bassY = trebleY + staffDistance;
     const availableWidth = width - 20;
 
     if (isCounterpointAbove) {
-      renderMeasures(context, emptyMeasures, {
+      renderMeasures(context, counterpointLine, {
         startX,
         y: trebleY,
         width: availableWidth,
         clef: trebleClef,
-        timeSignature
+        timeSignature,
       });
 
-      renderMeasures(context, measures, {
+      renderMeasures(context, cantusFirmusMeasures, {
         startX,
         y: bassY,
         width: availableWidth,
         clef: bassClef,
-        timeSignature
+        timeSignature,
       });
     } else {
-      renderMeasures(context, measures, {
+      renderMeasures(context, cantusFirmusMeasures, {
         startX,
         y: trebleY,
         width: availableWidth,
         clef: trebleClef,
-        timeSignature
+        timeSignature,
       });
 
-      renderMeasures(context, emptyMeasures, {
+      renderMeasures(context, counterpointLine, {
         startX,
         y: bassY,
         width: availableWidth,
         clef: bassClef,
-        timeSignature
+        timeSignature,
       });
     }
+
+    connectStaves(context, {
+      startX,
+      trebleY,
+      bassY,
+      width: availableWidth,
+      measureCount: cantusFirmusMeasures.length,
+    });
   }
 }
