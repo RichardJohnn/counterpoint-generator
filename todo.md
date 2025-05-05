@@ -47,16 +47,16 @@
 - [x] Write tests for MusicStaff rendering
 
 ### Rendering Notes on the Staff
-- [ ] Update MusicStaff to accept note array
-- [ ] Add note rendering functionality
-  - [ ] Position notes correctly on staff
-  - [ ] Handle different durations
-  - [ ] Add bar lines between measures
-- [ ] Create musicTheory.ts utility
-  - [ ] Add note name to VexFlow conversion
-  - [ ] Add note range validation
-  - [ ] Add note positioning helpers
-- [ ] Add tests for note rendering
+- [x] Update MusicStaff to accept note array
+- [x] Add note rendering functionality
+  - [x] Position notes correctly on staff
+  - [x] Handle different durations
+  - [x] Add bar lines between measures
+- [x] Create musicTheory.ts utility
+  - [x] Add note name to VexFlow conversion
+  - [x] Add note range validation
+  - [x] Add note positioning helpers
+- [x] Add tests for note rendering
 
 ### Basic Staff Interaction
 - [ ] Enhance MusicStaff for click interaction

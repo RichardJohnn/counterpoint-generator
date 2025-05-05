@@ -1,6 +1,6 @@
 export interface Note {
   pitch: string; // e.g., "C4"
-  duration: "w" | "h" | "q" | "8" | "16"; //
+  duration: "w" | "h" | "q" | "8" | "16" | "hd" | "qd"; //
   // measure: number; // which measure the note belongs to
   // position: number; // position within measure (0-based)
 }
