@@ -1,8 +1,9 @@
 import { Box } from "@mui/material";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useVexFlowContext } from "../hooks";
 import { renderMusicStaff } from "../utils";
 import { Note } from "../types";
+import { useStaffInteraction } from "../hooks/useStaffInteraction";
 
 interface MusicStaffProps {
   cantusFirmusNotes?: Note[];
@@ -20,10 +21,23 @@ function MusicStaff({
   trebleClef = "treble",
   bassClef = "treble",
   timeSignature = "C",
-  staffDistance = 150,
-  isCounterpointAbove = true
+  isCounterpointAbove = true,
 }: MusicStaffProps) {
   const { containerRef, initialize, getContext } = useVexFlowContext();
+  const staffRef = useRef<HTMLDivElement>(null);
+  const {
+    hoveredPitch,
+    showGhostNote,
+    handleMouseMove,
+    handleMouseLeave,
+    handleClick,
+  } = useStaffInteraction({
+    staffRef: containerRef,
+    onAddNote: (note) => {
+      console.log("note=", note);
+    },
+    staffLineHeight: 10,
+  });
 
   const renderStaves = useCallback(() => {
     if (!containerRef.current) return;
@@ -33,15 +47,14 @@ function MusicStaff({
     if (context) {
       renderMusicStaff(context, {
         width: containerRef.current.clientWidth,
-        // height: containerRef.current.clientHeight,
+        height: containerRef.current.clientHeight,
         cantusFirmusNotes,
         counterpointNotes,
         trebleClef,
         bassClef,
         timeSignature,
-        staffDistance,
-        isCounterpointAbove
-      })
+        isCounterpointAbove,
+      });
     }
   }, [
     containerRef,
@@ -52,8 +65,7 @@ function MusicStaff({
     trebleClef,
     bassClef,
     timeSignature,
-    staffDistance,
-    isCounterpointAbove
+    isCounterpointAbove,
   ]);
 
   useEffect(() => {
@@ -70,7 +82,15 @@ function MusicStaff({
     };
   }, [renderStaves]);
 
-  return <Box ref={containerRef} sx={{ width: "100%", height: "100%" }}></Box>;
+  return (
+    <Box
+      ref={containerRef}
+      sx={{ width: "100%", height: "100%" }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onClick={handleClick}
+    />
+  );
 }
 
 export default MusicStaff;

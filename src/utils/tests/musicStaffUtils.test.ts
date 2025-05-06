@@ -1,7 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, Mock } from "vitest";
 import * as Vex from "vexflow";
 import {
-  drawStaves,
   drawMeasure,
   renderNotes,
   connectStaves,
@@ -59,26 +58,6 @@ vi.mock("../musicTheory", async () => {
     createVexFlowNote: vi.fn((note) => ({ note })),
     organizeNotesIntoMeasures: vi.fn((notes) => [{ notes }]),
   };
-});
-
-describe("drawStaves", () => {
-  it("draws treble and bass staves with clefs and time signatures", () => {
-    const options = {
-      width: 500,
-      trebleClef: "treble",
-      bassClef: "bass",
-      timeSignature: "4/4",
-      staffDistance: 100,
-    };
-    const { trebleStave, bassStave } = drawStaves(mockContext, options);
-    expect(trebleStave.addClef).toHaveBeenCalledWith("treble");
-    expect(trebleStave.addTimeSignature).toHaveBeenCalledWith("4/4");
-    expect(trebleStave.draw).toHaveBeenCalled();
-
-    expect(bassStave.addClef).toHaveBeenCalledWith("bass");
-    expect(bassStave.addTimeSignature).toHaveBeenCalledWith("4/4");
-    expect(bassStave.draw).toHaveBeenCalled();
-  });
 });
 
 describe("drawMeasure", () => {
@@ -161,10 +140,11 @@ describe("renderMusicStaff", () => {
   });
 
   it("draws default staves when no notes are present", () => {
-    // (musicTheory.organizeNotesIntoMeasures as any).mockReturnValueOnce([]);
+    (musicTheory.organizeNotesIntoMeasures as Mock).mockReturnValueOnce([]);
 
     renderMusicStaff(mockContext, {
       width: 600,
+      height: 400,
       cantusFirmusNotes: [],
       counterpointNotes: [],
     });
@@ -174,12 +154,13 @@ describe("renderMusicStaff", () => {
 
   it("renders measures when cantus firmus notes exist", () => {
     const note: Note = { pitch: "C4", duration: "q" };
-    // (musicTheory.organizeNotesIntoMeasures as any).mockImplementation(
-    //   (notes: Note[]) => [{ notes }]
-    // );
+    (musicTheory.organizeNotesIntoMeasures as Mock).mockImplementation(
+      (notes: Note[]) => [{ notes }]
+    );
 
     renderMusicStaff(mockContext, {
       width: 600,
+      height: 400,
       cantusFirmusNotes: [note],
       counterpointNotes: [note],
     });

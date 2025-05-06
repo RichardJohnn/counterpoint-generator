@@ -25,21 +25,13 @@ const DEFAULTS = {
 
 export interface MusicStaffOptions {
   width: number;
+  height: number;
   cantusFirmusNotes: Note[];
   counterpointNotes: Note[];
   trebleClef?: string;
   bassClef?: string;
   timeSignature?: string;
-  staffDistance?: number;
   isCounterpointAbove?: boolean;
-}
-
-export interface StaveOptions {
-  width: number;
-  trebleClef: string;
-  bassClef: string;
-  timeSignature: string;
-  staffDistance: number;
 }
 
 export interface MeasureOptions {
@@ -65,32 +57,6 @@ export interface MeasuresRenderOptions {
   width: number;
   clef?: string;
   timeSignature?: string;
-}
-
-// TODO: add height to dynamically move bottom staff?
-export function drawStaves(context: RenderContext, options: StaveOptions) {
-  const { width, trebleClef, bassClef, timeSignature, staffDistance } = options;
-
-  const staveWidth = width - LAYOUT.HORIZONTAL_PADDING * 2;
-  const bassStaveY = LAYOUT.TOP_MARGIN + staffDistance;
-
-  const trebleStave = new Stave(
-    LAYOUT.HORIZONTAL_PADDING,
-    LAYOUT.TOP_MARGIN,
-    staveWidth
-  );
-  trebleStave.addClef(trebleClef).addTimeSignature(timeSignature);
-  trebleStave.setContext(context).draw();
-
-  const bassStave = new Stave(
-    LAYOUT.HORIZONTAL_PADDING,
-    bassStaveY,
-    staveWidth
-  );
-  bassStave.addClef(bassClef).addTimeSignature(timeSignature);
-  bassStave.setContext(context).draw();
-
-  return { trebleStave, bassStave };
 }
 
 export function drawMeasure(context: RenderContext, options: MeasureOptions) {
@@ -253,13 +219,12 @@ export function renderMusicStaff(
 ) {
   const {
     width,
-    // height,
+    height,
     cantusFirmusNotes,
     counterpointNotes,
     trebleClef = DEFAULTS.TREBLE_CLEF,
     bassClef = DEFAULTS.BASS_CLEF,
     timeSignature = DEFAULTS.TIME_SIGNATURE,
-    staffDistance = LAYOUT.DEFAULT_STAFF_DISTANCE,
     isCounterpointAbove = true,
   } = options;
 
@@ -274,22 +239,38 @@ export function renderMusicStaff(
 
   const startX = LAYOUT.HORIZONTAL_PADDING;
   const trebleY = LAYOUT.TOP_MARGIN;
-  const bassY = trebleY + staffDistance;
+  const bassY = height / 2;
   const availableWidth = width - LAYOUT.HORIZONTAL_PADDING * 2;
 
   if (cantusFirmusMeasures.length === 0) {
-    drawStaves(context, {
-      width,
-      trebleClef,
-      bassClef,
+    // drawStaves(context, {
+    //   width,
+    //   height,
+    //   trebleClef,
+    //   bassClef,
+    //   timeSignature,
+    //   staffDistance,
+    // });
+    renderMeasures(context, [{notes:[]}], {
+      startX,
+      y: trebleY,
+      width: availableWidth,
+      clef: trebleClef,
       timeSignature,
-      staffDistance,
+    });
+
+    renderMeasures(context, [{notes:[]}], {
+      startX,
+      y: bassY,
+      width: availableWidth,
+      clef: bassClef,
+      timeSignature,
     });
 
     connectStaves(context, {
       startX,
       trebleY,
-      bassY,
+      bassY: bassY,
       width: availableWidth,
       measureCount: LAYOUT.DEFAULT_MEASURE_COUNT,
     });

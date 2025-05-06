@@ -90,7 +90,6 @@ describe("Music Staff Component", () => {
         trebleClef="alto"
         bassClef="tenor"
         timeSignature="4/4"
-        staffDistance={200}
       />
     );
 
@@ -100,7 +99,6 @@ describe("Music Staff Component", () => {
         trebleClef: "alto",
         bassClef: "tenor",
         timeSignature: "4/4",
-        staffDistance: 200,
       })
     );
   });
