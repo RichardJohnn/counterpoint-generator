@@ -8,7 +8,7 @@ import {
 import { Measure, Note } from "../types";
 import { createVexFlowNote, organizeNotesIntoMeasures } from "./musicTheory";
 
-const LAYOUT = {
+export const LAYOUT = {
   HORIZONTAL_PADDING: 10,
   TOP_MARGIN: 20,
   CLEF_TIME_SIGNATURE_WIDTH: 50,
@@ -243,15 +243,7 @@ export function renderMusicStaff(
   const availableWidth = width - LAYOUT.HORIZONTAL_PADDING * 2;
 
   if (cantusFirmusMeasures.length === 0) {
-    // drawStaves(context, {
-    //   width,
-    //   height,
-    //   trebleClef,
-    //   bassClef,
-    //   timeSignature,
-    //   staffDistance,
-    // });
-    renderMeasures(context, [{notes:[]}], {
+    renderMeasures(context, [{ notes: [] }], {
       startX,
       y: trebleY,
       width: availableWidth,
@@ -259,7 +251,7 @@ export function renderMusicStaff(
       timeSignature,
     });
 
-    renderMeasures(context, [{notes:[]}], {
+    renderMeasures(context, [{ notes: [] }], {
       startX,
       y: bassY,
       width: availableWidth,

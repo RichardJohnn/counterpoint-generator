@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { Note } from "../types";
+import { LAYOUT } from "../utils";
 
 interface StaffInteractionState {
   hoveredPosition: { x: number; y: number } | null;
@@ -9,6 +10,8 @@ interface StaffInteractionState {
 
 interface UseStaffInteractionProps {
   staffRef: React.RefObject<HTMLDivElement>;
+  trebleClef?: string;
+  bassClef?: string;
   onAddNote?: (note: Note) => void;
   staffLineHeight?: number;
 }
@@ -20,8 +23,22 @@ interface UseStaffInteractionResult extends StaffInteractionState {
   calculatePitchFromYPosition: (y: number) => string | null;
 }
 
+interface ClefReference {
+  middleLineNote: string;
+  middleLineOctave: number;
+}
+
+const CLEF_REFERENCES: Record<string, ClefReference> = {
+  treble: { middleLineNote: "B", middleLineOctave: 4 },
+  alto: { middleLineNote: "C", middleLineOctave: 4 },
+  tenor: { middleLineNote: "A", middleLineOctave: 3 },
+  bass: { middleLineNote: "D", middleLineOctave: 3 },
+};
+
 export function useStaffInteraction({
   staffRef,
+  trebleClef,
+  bassClef,
   onAddNote,
   staffLineHeight = 10,
 }: UseStaffInteractionProps): UseStaffInteractionResult {
@@ -37,16 +54,34 @@ export function useStaffInteraction({
 
       const staffRect = staffRef.current.getBoundingClientRect();
       const relativeY = y - staffRect.top;
+      const height = staffRect.height;
 
-      const middleLineY = staffRect.height / 2;
+      // FIXME: These measurements seem a bit hacky but they work
+      const trebleY = LAYOUT.TOP_MARGIN + staffLineHeight * 4;
+      const bassY = height / 2 + staffLineHeight * 4;
+      const staffHeight = (height - LAYOUT.TOP_MARGIN * 2) / 2;
+
+      let activeClef: string;
+      let staffTop: number;
+
+      if (relativeY < bassY - staffHeight / 2) {
+        activeClef = trebleClef || "treble";
+        staffTop = trebleY;
+      } else {
+        activeClef = bassClef || "treble";
+        staffTop = bassY;
+      }
+
+      const middleLineY = staffTop + 2 * staffLineHeight;
       const stepsFromMiddle = Math.round(
         (middleLineY - relativeY) / (staffLineHeight / 2)
       );
 
-      const pitchNames = ["C", "D", "E", "F", "G", "A", "B"];
+      const { middleLineNote, middleLineOctave } = CLEF_REFERENCES[activeClef];
 
-      let octave = 4;
-      let noteIndex = 6;
+      const pitchNames = ["C", "D", "E", "F", "G", "A", "B"];
+      let noteIndex = pitchNames.indexOf(middleLineNote);
+      let octave = middleLineOctave;
 
       noteIndex += stepsFromMiddle;
 
@@ -62,7 +97,7 @@ export function useStaffInteraction({
 
       return `${pitchNames[noteIndex]}${octave}`;
     },
-    [staffRef, staffLineHeight]
+    [staffRef, staffLineHeight, trebleClef, bassClef]
   );
 
   const handleMouseMove = useCallback(

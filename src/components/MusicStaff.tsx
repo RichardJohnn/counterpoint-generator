@@ -33,6 +33,8 @@ function MusicStaff({
     handleClick,
   } = useStaffInteraction({
     staffRef: containerRef,
+    trebleClef,
+    bassClef,
     onAddNote: (note) => {
       console.log("note=", note);
     },
