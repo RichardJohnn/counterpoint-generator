@@ -1,21 +1,21 @@
 import { Box, Paper, Typography } from "@mui/material";
 import { useCounterpoint } from "../hooks";
 import MusicStaff from "./MusicStaff";
-import { Note } from "../types";
+// import { Note } from "../types";
 
-const defaultCantusFirmus: Note[] = [
-  { pitch: "D4", duration: "w" },
-  { pitch: "F4", duration: "w" },
-  { pitch: "E4", duration: "w" },
-  { pitch: "D4", duration: "w" },
-  { pitch: "G4", duration: "w" },
-  { pitch: "F4", duration: "w" },
-  { pitch: "A4", duration: "w" },
-  { pitch: "G4", duration: "w" },
-  { pitch: "F4", duration: "w" },
-  { pitch: "E4", duration: "w" },
-  { pitch: "D4", duration: "w" },
-];
+// const defaultCantusFirmus: Note[] = [
+//   { pitch: "D4", duration: "w" },
+//   { pitch: "F4", duration: "w" },
+//   { pitch: "E4", duration: "w" },
+//   { pitch: "D4", duration: "w" },
+//   { pitch: "G4", duration: "w" },
+//   { pitch: "F4", duration: "w" },
+//   { pitch: "A4", duration: "w" },
+//   { pitch: "G4", duration: "w" },
+//   { pitch: "F4", duration: "w" },
+//   { pitch: "E4", duration: "w" },
+//   { pitch: "D4", duration: "w" },
+// ];
 
 function StaffContainer() {
   const { cantusFirmus, counterpoint, selectedSpecies, isCounterpointAbove } =
@@ -45,7 +45,7 @@ function StaffContainer() {
         }}
       >
         {hasNotes ? (
-          <MusicStaff cantusFirmusNotes={defaultCantusFirmus} counterpointNotes={counterpoint} isCounterpointAbove={isCounterpointAbove}/>
+          <MusicStaff cantusFirmusNotes={cantusFirmus} counterpointNotes={counterpoint} isCounterpointAbove={isCounterpointAbove}/>
         ) : (
           <Typography
             variant="body1"

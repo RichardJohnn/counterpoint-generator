@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { useVexFlowContext } from "../hooks";
 import { renderMusicStaff } from "../utils";
 import { Note } from "../types";
-import { useStaffInteraction } from "../hooks/useStaffInteraction";
+import { useStaffInteraction, useCounterpoint } from "../hooks";
 
 interface MusicStaffProps {
   cantusFirmusNotes?: Note[];
@@ -13,6 +13,7 @@ interface MusicStaffProps {
   timeSignature?: string;
   staffDistance?: number;
   isCounterpointAbove?: boolean;
+  editMode?: "cantus" | "counterpoint";
 }
 
 function MusicStaff({
@@ -22,9 +23,21 @@ function MusicStaff({
   bassClef = "treble",
   timeSignature = "C",
   isCounterpointAbove = true,
+  editMode = "cantus"
 }: MusicStaffProps) {
   const { containerRef, initialize, getContext } = useVexFlowContext();
   const staffRef = useRef<HTMLDivElement>(null);
+
+  const {setCantusFirmus, setCounterpoint, cantusFirmus, counterpoint, addToHistory } = useCounterpoint();
+
+  const handleAddNote = useCallback((note: Note) => {
+    if (editMode === "cantus") {
+      setCantusFirmus([...cantusFirmus, note]);
+    } else {
+      setCounterpoint([...counterpoint, note]);
+    }
+  }, [editMode, cantusFirmus, counterpoint, setCantusFirmus, setCounterpoint]);
+
   const {
     hoveredPitch,
     showGhostNote,
@@ -35,9 +48,7 @@ function MusicStaff({
     staffRef: containerRef,
     trebleClef,
     bassClef,
-    onAddNote: (note) => {
-      console.log("note=", note);
-    },
+    onAddNote: handleAddNote,
     staffLineHeight: 10,
   });
 
