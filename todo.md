@@ -39,7 +39,7 @@
 - [x] Create MusicStaff component
   - [x] Add props for clef type and staff width
   - [x] Implement VexFlow rendering
-  - [ ] Add support for multiple measures (Deferred to next step)
+  - [x] Add support for multiple measures
   - [x] Add time and key signature support
 - [x] Update StaffContainer to use MusicStaff
 - [x] Create useVexFlowContext hook for VexFlow initialization
@@ -59,17 +59,17 @@
 - [x] Add tests for note rendering
 
 ### Basic Staff Interaction
-- [ ] Enhance MusicStaff for click interaction
-  - [ ] Add click detection
-  - [ ] Calculate note position from click
-  - [ ] Add hover feedback
-  - [ ] Add ghost note preview
-- [ ] Create useStaffInteraction hook
-  - [ ] Add state for interaction
-  - [ ] Add click and hover handlers
-  - [ ] Add coordinate to note conversion
-- [ ] Update CounterpointContext with note adding method
-- [ ] Connect staff clicks to context
+- [x] Enhance MusicStaff for click interaction
+  - [x] Add click detection
+  - [x] Calculate note position from click
+  - [x] Add hover feedback
+  - [x] Add ghost note preview
+- [x] Create useStaffInteraction hook
+  - [x] Add state for interaction
+  - [x] Add click and hover handlers
+  - [x] Add coordinate to note conversion
+- [x] Update CounterpointContext with note adding method
+- [x] Connect staff clicks to context
 - [ ] Add tests for staff interaction
 
 ## Phase 3: Cantus Firmus Input

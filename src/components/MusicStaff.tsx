@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import { useVexFlowContext } from "../hooks";
 import { renderMusicStaff } from "../utils";
 import { Note } from "../types";
@@ -23,20 +23,27 @@ function MusicStaff({
   bassClef = "treble",
   timeSignature = "C",
   isCounterpointAbove = true,
-  editMode = "cantus"
+  editMode = "cantus",
 }: MusicStaffProps) {
   const { containerRef, initialize, getContext } = useVexFlowContext();
-  const staffRef = useRef<HTMLDivElement>(null);
 
-  const {setCantusFirmus, setCounterpoint, cantusFirmus, counterpoint, addToHistory } = useCounterpoint();
+  const {
+    setCantusFirmus,
+    setCounterpoint,
+    cantusFirmus,
+    counterpoint,
+  } = useCounterpoint();
 
-  const handleAddNote = useCallback((note: Note) => {
-    if (editMode === "cantus") {
-      setCantusFirmus([...cantusFirmus, note]);
-    } else {
-      setCounterpoint([...counterpoint, note]);
-    }
-  }, [editMode, cantusFirmus, counterpoint, setCantusFirmus, setCounterpoint]);
+  const handleAddNote = useCallback(
+    (note: Note) => {
+      if (editMode === "cantus") {
+        setCantusFirmus([...cantusFirmus, note]);
+      } else {
+        setCounterpoint([...counterpoint, note]);
+      }
+    },
+    [editMode, cantusFirmus, counterpoint, setCantusFirmus, setCounterpoint]
+  );
 
   const {
     hoveredPitch,
@@ -48,6 +55,7 @@ function MusicStaff({
     staffRef: containerRef,
     trebleClef,
     bassClef,
+    isCounterpointAbove,
     onAddNote: handleAddNote,
     staffLineHeight: 10,
   });
@@ -58,6 +66,16 @@ function MusicStaff({
     initialize(containerRef.current);
     const context = getContext();
     if (context) {
+      let ghostNote: Note | null = null;
+      if (showGhostNote && hoveredPitch) {
+        ghostNote = {
+          pitch: hoveredPitch,
+          duration: "w",
+        }
+      }
+
+      const isGhostNoteAbove = editMode === "counterpoint" ? isCounterpointAbove : !isCounterpointAbove;
+
       renderMusicStaff(context, {
         width: containerRef.current.clientWidth,
         height: containerRef.current.clientHeight,
@@ -67,6 +85,8 @@ function MusicStaff({
         bassClef,
         timeSignature,
         isCounterpointAbove,
+        ghostNote,
+        isGhostNoteAbove
       });
     }
   }, [
@@ -79,6 +99,9 @@ function MusicStaff({
     bassClef,
     timeSignature,
     isCounterpointAbove,
+    showGhostNote,
+    hoveredPitch,
+    editMode,
   ]);
 
   useEffect(() => {

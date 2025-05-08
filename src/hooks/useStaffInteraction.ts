@@ -9,9 +9,10 @@ interface StaffInteractionState {
 }
 
 interface UseStaffInteractionProps {
-  staffRef: React.RefObject<HTMLDivElement>;
+  staffRef: React.RefObject<HTMLDivElement | null>;
   trebleClef?: string;
   bassClef?: string;
+  isCounterpointAbove: boolean;
   onAddNote?: (note: Note) => void;
   staffLineHeight?: number;
 }
@@ -39,6 +40,7 @@ export function useStaffInteraction({
   staffRef,
   trebleClef,
   bassClef,
+  isCounterpointAbove,
   onAddNote,
   staffLineHeight = 10,
 }: UseStaffInteractionProps): UseStaffInteractionResult {
@@ -65,9 +67,11 @@ export function useStaffInteraction({
       let staffTop: number;
 
       if (relativeY < bassY - staffHeight / 2) {
+        if (isCounterpointAbove) return null;
         activeClef = trebleClef || "treble";
         staffTop = trebleY;
       } else {
+        if (!isCounterpointAbove) return null;
         activeClef = bassClef || "treble";
         staffTop = bassY;
       }
@@ -97,7 +101,7 @@ export function useStaffInteraction({
 
       return `${pitchNames[noteIndex]}${octave}`;
     },
-    [staffRef, staffLineHeight, trebleClef, bassClef]
+    [staffRef, staffLineHeight, trebleClef, bassClef, isCounterpointAbove]
   );
 
   const handleMouseMove = useCallback(

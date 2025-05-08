@@ -4,6 +4,7 @@ import {
   Voice,
   Formatter,
   StaveConnector,
+  StaveNote,
 } from "vexflow";
 import { Measure, Note } from "../types";
 import { createVexFlowNote, organizeNotesIntoMeasures } from "./musicTheory";
@@ -13,7 +14,7 @@ export const LAYOUT = {
   TOP_MARGIN: 20,
   CLEF_TIME_SIGNATURE_WIDTH: 50,
   DEFAULT_STAFF_DISTANCE: 150,
-  DEFAULT_MEASURE_COUNT: 8,
+  DEFAULT_MEASURE_COUNT: 1,
   STAVE_CONNECTOR_WIDTH: 1,
 };
 
@@ -32,6 +33,8 @@ export interface MusicStaffOptions {
   bassClef?: string;
   timeSignature?: string;
   isCounterpointAbove?: boolean;
+  ghostNote?: Note | null;
+  isGhostNoteAbove?: boolean;
 }
 
 export interface MeasureOptions {
@@ -57,6 +60,7 @@ export interface MeasuresRenderOptions {
   width: number;
   clef?: string;
   timeSignature?: string;
+  ghostNote?: Note | null;
 }
 
 export function drawMeasure(context: RenderContext, options: MeasureOptions) {
@@ -84,11 +88,19 @@ export function renderNotes(
   context: RenderContext,
   stave: Stave,
   notes: Note[],
-  clef = DEFAULTS.TREBLE_CLEF
+  clef = DEFAULTS.TREBLE_CLEF,
+  ghostNote: Note | null = null
 ) {
-  if (notes.length === 0) return;
+  if (notes.length === 0 && !ghostNote) return;
 
   const vexNotes = notes.map((note) => createVexFlowNote(note, clef));
+  if (vexNotes.length === 0) {
+    const rest = new StaveNote({
+      keys: ["B/4"],
+      duration: "wr",
+    }).setStyle({ fillStyle: "transparent", strokeStyle: "transparent" });
+    vexNotes.push(rest);
+  }
 
   const voice = new Voice({
     numBeats: 4,
@@ -101,6 +113,31 @@ export function renderNotes(
   formatter.joinVoices([voice]).format([voice], stave.getWidth() - 50);
 
   voice.draw(context, stave);
+
+  if (ghostNote) {
+    const vexGhostNote = createVexFlowNote(ghostNote, clef);
+
+    if (vexGhostNote instanceof StaveNote) {
+      vexGhostNote.setStyle({
+        fillStyle: "rgba(0, 0, 0, 0.3)",
+        strokeStyle: "rgba(0, 0, 0, 0.3)",
+      });
+
+      const ghostVoice = new Voice({
+        numBeats: 4,
+        beatValue: 4,
+      });
+
+      ghostVoice.addTickable(vexGhostNote);
+
+      const ghostFormatter = new Formatter();
+      ghostFormatter
+        .joinVoices([ghostVoice])
+        .format([ghostVoice], stave.getWidth() - 50);
+
+      ghostVoice.draw(context, stave);
+    }
+  }
 }
 
 export function renderMeasures(
@@ -114,14 +151,16 @@ export function renderMeasures(
     width,
     clef = DEFAULTS.TREBLE_CLEF,
     timeSignature = DEFAULTS.TIME_SIGNATURE,
+    ghostNote = null,
   } = options;
+  const measuresToRender = measures.length > 0 ? measures : [{ notes: [] }];
 
   const measureWidth =
-    measures.length > 1
-      ? (width - LAYOUT.CLEF_TIME_SIGNATURE_WIDTH) / measures.length
+    measuresToRender.length > 1
+      ? (width - LAYOUT.CLEF_TIME_SIGNATURE_WIDTH) / measuresToRender.length
       : width - LAYOUT.CLEF_TIME_SIGNATURE_WIDTH;
 
-  measures.forEach((measure, index) => {
+  measuresToRender.forEach((measure, index) => {
     let measureX: number, currentMeasureWidth: number;
 
     if (index === 0) {
@@ -142,7 +181,14 @@ export function renderMeasures(
       isFirstMeasure: index === 0,
     });
 
-    renderNotes(context, stave, measure.notes, clef);
+    const showGhostInThisMeasure = index === measuresToRender.length - 1;
+    renderNotes(
+      context,
+      stave,
+      measure.notes,
+      clef,
+      showGhostInThisMeasure ? ghostNote : null
+    );
   });
 }
 
@@ -226,7 +272,14 @@ export function renderMusicStaff(
     bassClef = DEFAULTS.BASS_CLEF,
     timeSignature = DEFAULTS.TIME_SIGNATURE,
     isCounterpointAbove = true,
+    ghostNote = null,
+    isGhostNoteAbove = isCounterpointAbove,
   } = options;
+
+  const startX = LAYOUT.HORIZONTAL_PADDING;
+  const trebleY = LAYOUT.TOP_MARGIN;
+  const bassY = height / 2;
+  const availableWidth = width - LAYOUT.HORIZONTAL_PADDING * 2;
 
   const cantusFirmusMeasures = organizeNotesIntoMeasures(
     cantusFirmusNotes,
@@ -237,80 +290,138 @@ export function renderMusicStaff(
     timeSignature
   );
 
-  const startX = LAYOUT.HORIZONTAL_PADDING;
-  const trebleY = LAYOUT.TOP_MARGIN;
-  const bassY = height / 2;
-  const availableWidth = width - LAYOUT.HORIZONTAL_PADDING * 2;
+  const addGhostToMeasures = (measures: Measure[]) => {
+    return ghostNote ? [...measures, { notes: [] }] : measures;
+  };
 
-  if (cantusFirmusMeasures.length === 0) {
-    renderMeasures(context, [{ notes: [] }], {
+  const cantusFirmusLine = addGhostToMeasures(cantusFirmusMeasures);
+  const counterpointLine = addGhostToMeasures(
+    counterpointMeasures.length === 0
+      ? cantusFirmusMeasures.map(() => ({ notes: [] }))
+      : counterpointMeasures
+  );
+
+  if (isCounterpointAbove) {
+    renderMeasures(context, counterpointLine, {
       startX,
       y: trebleY,
       width: availableWidth,
       clef: trebleClef,
       timeSignature,
+      ghostNote: isGhostNoteAbove ? ghostNote : null,
     });
 
-    renderMeasures(context, [{ notes: [] }], {
+    renderMeasures(context, cantusFirmusLine, {
       startX,
       y: bassY,
       width: availableWidth,
       clef: bassClef,
       timeSignature,
-    });
-
-    connectStaves(context, {
-      startX,
-      trebleY,
-      bassY: bassY,
-      width: availableWidth,
-      measureCount: LAYOUT.DEFAULT_MEASURE_COUNT,
+      ghostNote: !isGhostNoteAbove ? ghostNote : null,
     });
   } else {
-    const emptyMeasures = cantusFirmusMeasures.map(() => ({ notes: [] }));
-    const counterpointLine =
-      counterpointMeasures.length === 0 ? emptyMeasures : counterpointMeasures;
-
-    if (isCounterpointAbove) {
-      renderMeasures(context, counterpointLine, {
-        startX,
-        y: trebleY,
-        width: availableWidth,
-        clef: trebleClef,
-        timeSignature,
-      });
-
-      renderMeasures(context, cantusFirmusMeasures, {
-        startX,
-        y: bassY,
-        width: availableWidth,
-        clef: bassClef,
-        timeSignature,
-      });
-    } else {
-      renderMeasures(context, cantusFirmusMeasures, {
-        startX,
-        y: trebleY,
-        width: availableWidth,
-        clef: trebleClef,
-        timeSignature,
-      });
-
-      renderMeasures(context, counterpointLine, {
-        startX,
-        y: bassY,
-        width: availableWidth,
-        clef: bassClef,
-        timeSignature,
-      });
-    }
-
-    connectStaves(context, {
+    renderMeasures(context, cantusFirmusLine, {
       startX,
-      trebleY,
-      bassY,
+      y: trebleY,
       width: availableWidth,
-      measureCount: cantusFirmusMeasures.length,
+      clef: trebleClef,
+      timeSignature,
+      ghostNote: isGhostNoteAbove ? ghostNote : null,
+    });
+
+    renderMeasures(context, counterpointLine, {
+      startX,
+      y: bassY,
+      width: availableWidth,
+      clef: bassClef,
+      timeSignature,
+      ghostNote: !isGhostNoteAbove ? ghostNote : null,
     });
   }
+
+  connectStaves(context, {
+    startX,
+    trebleY,
+    bassY,
+    width: availableWidth,
+    measureCount: Math.max(cantusFirmusLine.length, counterpointLine.length),
+  });
+
+  // if (cantusFirmusMeasures.length === 0) {
+  //   renderMeasures(context, [{ notes: [] }], {
+  //     startX,
+  //     y: trebleY,
+  //     width: availableWidth,
+  //     clef: trebleClef,
+  //     timeSignature,
+  //     ghostNote: isGhostNoteAbove ? ghostNote : null,
+  //   });
+
+  //   renderMeasures(context, [{ notes: [] }], {
+  //     startX,
+  //     y: bassY,
+  //     width: availableWidth,
+  //     clef: bassClef,
+  //     timeSignature,
+  //     ghostNote: !isGhostNoteAbove ? ghostNote : null,
+  //   });
+
+  //   connectStaves(context, {
+  //     startX,
+  //     trebleY,
+  //     bassY: bassY,
+  //     width: availableWidth,
+  //     measureCount: LAYOUT.DEFAULT_MEASURE_COUNT,
+  //   });
+  // } else {
+  //   const emptyMeasures = cantusFirmusMeasures.map(() => ({ notes: [] }));
+  //   const counterpointLine =
+  //     counterpointMeasures.length === 0 ? emptyMeasures : counterpointMeasures;
+
+  //   if (isCounterpointAbove) {
+  //     renderMeasures(context, counterpointLine, {
+  //       startX,
+  //       y: trebleY,
+  //       width: availableWidth,
+  //       clef: trebleClef,
+  //       timeSignature,
+  //       ghostNote: isGhostNoteAbove ? ghostNote : null,
+  //     });
+
+  //     renderMeasures(context, cantusFirmusMeasures, {
+  //       startX,
+  //       y: bassY,
+  //       width: availableWidth,
+  //       clef: bassClef,
+  //       timeSignature,
+  //       ghostNote: !isGhostNoteAbove ? ghostNote : null,
+  //     });
+  //   } else {
+  //     renderMeasures(context, cantusFirmusMeasures, {
+  //       startX,
+  //       y: trebleY,
+  //       width: availableWidth,
+  //       clef: trebleClef,
+  //       timeSignature,
+  //       ghostNote: isGhostNoteAbove ? ghostNote : null,
+  //     });
+
+  //     renderMeasures(context, counterpointLine, {
+  //       startX,
+  //       y: bassY,
+  //       width: availableWidth,
+  //       clef: bassClef,
+  //       timeSignature,
+  //       ghostNote: !isGhostNoteAbove ? ghostNote : null,
+  //     });
+  //   }
+
+  // connectStaves(context, {
+  //   startX,
+  //   trebleY,
+  //   bassY,
+  //   width: availableWidth,
+  //   measureCount: cantusFirmusMeasures.length,
+  // });
+  // }
 }
