@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import MusicStaff from "../components/MusicStaff";
 import * as hooks from "../hooks";
 import * as utils from "../utils";
+import { CounterpointProvider } from "../context";
 
 vi.mock("../hooks", async () => {
   const actual = await vi.importActual("../hooks");
@@ -39,6 +40,10 @@ vi.mock("vexflow", () => {
   };
 });
 
+function renderWithContext(ui: React.ReactElement) {
+  return render(<CounterpointProvider>{ui}</CounterpointProvider>);
+}
+
 describe("Music Staff Component", () => {
   const originalInnerWidth = window.innerWidth;
   const originalInnerHeight = window.innerHeight;
@@ -67,12 +72,12 @@ describe("Music Staff Component", () => {
   });
 
   it("renders without crashing", () => {
-    render(<MusicStaff />);
+    renderWithContext(<MusicStaff />);
     expect(hooks.useVexFlowContext).toHaveBeenCalled();
   });
 
   it("initializes with default props", () => {
-    render(<MusicStaff />);
+    renderWithContext(<MusicStaff />);
 
     expect(utils.renderMusicStaff).toHaveBeenCalledWith(
       expect.anything(),
@@ -85,12 +90,8 @@ describe("Music Staff Component", () => {
   });
 
   it("uses custom props when provided", () => {
-    render(
-      <MusicStaff
-        trebleClef="alto"
-        bassClef="tenor"
-        timeSignature="4/4"
-      />
+    renderWithContext(
+      <MusicStaff trebleClef="alto" bassClef="tenor" timeSignature="4/4" />
     );
 
     expect(utils.renderMusicStaff).toHaveBeenCalledWith(
@@ -104,7 +105,7 @@ describe("Music Staff Component", () => {
   });
 
   it("responds to window resize events", () => {
-    render(<MusicStaff />);
+    renderWithContext(<MusicStaff />);
 
     vi.clearAllMocks();
 

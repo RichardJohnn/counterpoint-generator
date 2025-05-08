@@ -70,7 +70,7 @@
   - [x] Add coordinate to note conversion
 - [x] Update CounterpointContext with note adding method
 - [x] Connect staff clicks to context
-- [ ] Add tests for staff interaction
+- [x] Add tests for staff interaction
 
 ## Phase 3: Cantus Firmus Input
 
