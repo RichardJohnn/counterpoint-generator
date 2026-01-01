@@ -4,6 +4,8 @@ export const initialState: CounterpointState = {
   cantusFirmus: [],
   counterpoint: [],
   selectedSpecies: 1,
+  selectedMode: "dorian",
+  selectedFinalis: "D",
   isCounterpointAbove: true,
   history: [],
 };
@@ -27,6 +29,16 @@ export function counterpointReducer(
       return {
         ...state,
         selectedSpecies: action.species,
+      };
+    case "SET_MODE":
+      return {
+        ...state,
+        selectedMode: action.mode,
+      };
+    case "SET_FINALIS":
+      return {
+        ...state,
+        selectedFinalis: action.finalis,
       };
     case "SET_COUNTERPOINT_POSITION":
       return {

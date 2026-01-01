@@ -25,7 +25,7 @@ function StaffContainer() {
   const hasNotes = true;
 
   return (
-    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Box sx={{ minHeight: 350, display: "flex", flexDirection: "column" }}>
       <Typography variant="h6" gutterBottom>
         Counterpoint Score Species {selectedSpecies}
       </Typography>
@@ -34,6 +34,7 @@ function StaffContainer() {
         elevation={0}
         sx={{
           flex: 1,
+          minHeight: 300,
           bgcolor: "#fcfcfc",
           border: "1px solid #e0e0e0",
           borderRadius: 1,

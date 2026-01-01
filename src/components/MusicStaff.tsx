@@ -121,7 +121,7 @@ function MusicStaff({
   return (
     <Box
       ref={containerRef}
-      sx={{ width: "100%", height: "100%" }}
+      sx={{ width: "100%", minHeight: 280, height: "100%" }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}

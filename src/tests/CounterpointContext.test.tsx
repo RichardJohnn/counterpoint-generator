@@ -19,11 +19,9 @@ const TestComponent = () => {
     undo,
   } = useCounterpoint();
 
-  const createNote = (pitch: string, measure: number): Note => ({
+  const createNote = (pitch: string): Note => ({
     pitch,
-    duration: 1,
-    measure,
-    position: 0,
+    duration: "w",
   });
 
   return (
@@ -37,7 +35,7 @@ const TestComponent = () => {
       <button
         data-testid="set-cantus-firmus"
         onClick={() =>
-          setCantusFirmus([createNote("C4", 1), createNote("D4", 2)])
+          setCantusFirmus([createNote("C4"), createNote("D4")])
         }
       >
         Set Cantus Firmus
@@ -45,7 +43,7 @@ const TestComponent = () => {
       <button
         data-testid="set-different-cantus"
         onClick={() =>
-          setCantusFirmus([createNote("E4", 1), createNote("D4", 2)])
+          setCantusFirmus([createNote("E4"), createNote("D4")])
         }
       >
         Set a Different Cantus Firmus
@@ -53,7 +51,7 @@ const TestComponent = () => {
       <button
         data-testid="set-counterpoint"
         onClick={() =>
-          setCounterpoint([createNote("G4", 1), createNote("F4", 2)])
+          setCounterpoint([createNote("G4"), createNote("F4")])
         }
       >
         Set Counterpoint

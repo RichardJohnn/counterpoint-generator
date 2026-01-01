@@ -1,5 +1,5 @@
 import { createContext, useReducer, ReactNode } from "react";
-import { CounterpointContextProps, Note, Species } from "../types";
+import { CounterpointContextProps, Note, Species, Mode, Finalis } from "../types";
 import { counterpointReducer, initialState } from "../reducers";
 
 const CounterpointContext = createContext<CounterpointContextProps | undefined>(
@@ -21,6 +21,14 @@ export function CounterpointProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_SPECIES', species })
   }
 
+  const setMode = (mode: Mode) => {
+    dispatch({ type: 'SET_MODE', mode })
+  }
+
+  const setFinalis = (finalis: Finalis) => {
+    dispatch({ type: 'SET_FINALIS', finalis })
+  }
+
   const setPosition = (position: boolean) => {
     dispatch({ type: 'SET_COUNTERPOINT_POSITION', position })
   }
@@ -38,6 +46,8 @@ export function CounterpointProvider({ children }: { children: ReactNode }) {
     setCantusFirmus,
     setCounterpoint,
     setSpecies,
+    setMode,
+    setFinalis,
     setPosition,
     addToHistory,
     undo

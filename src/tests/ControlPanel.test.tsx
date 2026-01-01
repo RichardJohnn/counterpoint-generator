@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { CounterpointProvider } from "../context";
 import ControlPanel from "../components/ControlPanel";
 
@@ -30,7 +30,7 @@ describe("ControlPanel", () => {
     expect(mockPlay).toHaveBeenCalled();
   });
 
-  it("toggles play/stop button", () => {
+  it("toggles play/stop button", async () => {
     const mockOnPlay = vi.fn();
     const mockOnStop = vi.fn();
 
@@ -42,7 +42,8 @@ describe("ControlPanel", () => {
     fireEvent.click(playButton);
     expect(mockOnPlay).toHaveBeenCalled();
 
-    const stopButton = screen.getByText("Stop");
+    // Wait for async state update after play
+    const stopButton = await waitFor(() => screen.getByText("Stop"));
     expect(stopButton).toBeDefined();
 
     fireEvent.click(stopButton);
