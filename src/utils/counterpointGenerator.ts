@@ -450,6 +450,54 @@ export function checkConsonance(
   return { passed: false, message: `Dissonant (${getIntervalName(interval)})` };
 }
 
+// Check if interval is an imperfect consonance (3rd or 6th) - preferred for harmony
+export function checkImperfectConsonance(
+  cfPitch: string,
+  cpPitch: string
+): { passed: boolean; message: string; isImperfect: boolean } {
+  const interval = getInterval(cfPitch, cpPitch);
+  const normalized = interval % 12;
+
+  // Imperfect consonances: m3 (3), M3 (4), m6 (8), M6 (9)
+  const isImperfect = [3, 4, 8, 9].includes(normalized);
+
+  if (isImperfect) {
+    return { passed: true, message: `Imperfect consonance (${getIntervalName(interval)})`, isImperfect: true };
+  }
+
+  // Perfect consonances: P1 (0), P5 (7), P8 (12)
+  if ([0, 7, 12].includes(normalized) || interval === 12) {
+    return { passed: false, message: `Perfect consonance (${getIntervalName(interval)})`, isImperfect: false };
+  }
+
+  return { passed: false, message: `Not a consonance (${getIntervalName(interval)})`, isImperfect: false };
+}
+
+// Check penultimate cadence rule
+// CF below (CP above): penultimate should be M6 (9 semitones) resolving to P8
+// CF above (CP below): penultimate should be m3 (3 semitones) resolving to P1
+export function checkPenultimateCadence(
+  cfPitch: string,
+  cpPitch: string,
+  isCounterpointAbove: boolean
+): { passed: boolean; message: string } {
+  const interval = getInterval(cfPitch, cpPitch);
+
+  if (isCounterpointAbove) {
+    // CP above CF: should be M6 (9 semitones)
+    if (interval === 9) {
+      return { passed: true, message: "Correct cadence: M6 before final (resolves to P8)" };
+    }
+    return { passed: false, message: `Penultimate should be M6 (got ${getIntervalName(interval)})` };
+  } else {
+    // CP below CF: should be m3 (3 semitones)
+    if (interval === 3) {
+      return { passed: true, message: "Correct cadence: m3 before final (resolves to P1)" };
+    }
+    return { passed: false, message: `Penultimate should be m3 (got ${getIntervalName(interval)})` };
+  }
+}
+
 function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -479,6 +527,13 @@ function scoreCandidate(
   const consonanceCheck = checkConsonance(cfPitch, candidate);
   if (!consonanceCheck.passed) {
     score -= consonanceWeight;
+  }
+
+  // Prefer imperfect consonances (3rds and 6ths) over perfect ones (5ths and 8ves)
+  const imperfectWeight = getRuleWeight(rules, "preferImperfectConsonances");
+  const imperfectCheck = checkImperfectConsonance(cfPitch, candidate);
+  if (imperfectCheck.isImperfect) {
+    score += imperfectWeight * 0.3; // Bonus for imperfect consonances
   }
 
   if (prevCF && prevCP) {
@@ -1051,6 +1106,19 @@ export function generateFirstSpecies(
       }
     }
 
+    // Penultimate note: M6 if CP above, m3 if CP below
+    const penultimateWeight = getRuleWeight(rules, "penultimateCadence");
+    if (index === cantusFirmus.length - 2 && penultimateWeight >= 90) {
+      const targetInterval = isAbove ? 9 : 3; // M6 if above, m3 if below
+      const cadenceCandidates = candidates.filter((p) => {
+        const interval = getInterval(cfPitch, p);
+        return interval === targetInterval;
+      });
+      if (cadenceCandidates.length > 0) {
+        candidates = cadenceCandidates;
+      }
+    }
+
     const prevCF = index > 0 ? cantusFirmus[index - 1].pitch : null;
     const prevCP = index > 0 ? result[index - 1] : null;
 
@@ -1110,6 +1178,34 @@ export function generateFirstSpecies(
         prevCP,
         rules
       );
+
+      // Check penultimate cadence for second-to-last note
+      if (i === result.length - 2) {
+        const cadenceCheck = checkPenultimateCadence(
+          cantusFirmus[i].pitch,
+          result[i],
+          isAbove
+        );
+        analysis.ruleResults.push({
+          ruleId: "penultimateCadence",
+          ruleName: "Penultimate Cadence",
+          passed: cadenceCheck.passed,
+          message: cadenceCheck.message,
+        });
+      }
+
+      // Check imperfect consonance preference
+      const imperfectCheck = checkImperfectConsonance(cantusFirmus[i].pitch, result[i]);
+      // Only add this as info, not as a violation (it's a preference)
+      if (imperfectCheck.isImperfect) {
+        analysis.ruleResults.push({
+          ruleId: "preferImperfectConsonances",
+          ruleName: "Imperfect Consonance",
+          passed: true,
+          message: imperfectCheck.message,
+        });
+      }
+
       noteAnalyses.push(analysis);
       violations += analysis.ruleResults.filter((r) => !r.passed).length;
     }

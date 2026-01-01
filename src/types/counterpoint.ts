@@ -87,6 +87,8 @@ export type RuleId =
   | "preferContraryMotion"
   | "preferStepwiseMotion" // Legacy - now means noForbiddenIntervals
   | "consonantIntervalsOnly"
+  | "preferImperfectConsonances" // prefer 3rds/6ths over 5ths/8ves
+  | "penultimateCadence" // M6→P8 (CF below) or m3→P1 (CF above)
   // Melodic rules (Fux)
   | "noForbiddenIntervals" // tritone, 7ths, >octave, desc 6ths, asc M6
   | "leapRecovery" // asc m6/oct, desc oct must be followed by step opposite
@@ -99,7 +101,6 @@ export type RuleId =
   | "beatOneConsonance"
   | "beatThreeConsonance"
   | "allowCambiata"
-  | "penultimateCadence"
   // 4th species specific
   | "upbeatConsonance"
   | "suspensionResolution"
@@ -189,6 +190,18 @@ export const FIRST_SPECIES_RULES: RuleConfig[] = [
     name: "Consonant Intervals",
     description: "Use only consonant intervals (3rds, 5ths, 6ths, 8ves)",
     weight: 100,
+  },
+  {
+    id: "preferImperfectConsonances",
+    name: "Prefer Imperfect Consonances",
+    description: "Use more 3rds and 6ths than 5ths and 8ves for better harmony",
+    weight: 60,
+  },
+  {
+    id: "penultimateCadence",
+    name: "Penultimate Cadence",
+    description: "Next-to-last bar: M6 if CF below, m3 if CF above",
+    weight: 90,
   },
   // Include melodic rules
   ...MELODIC_RULES,
