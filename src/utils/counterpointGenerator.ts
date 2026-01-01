@@ -236,17 +236,205 @@ export function checkContraryMotion(
   return { passed: false, message: "Similar motion" };
 }
 
+// Check for forbidden melodic intervals per Fux rules:
+// - Tritone (augmented 4th) = 6 semitones
+// - Sevenths (minor = 10, major = 11)
+// - Greater than octave (> 12)
+// - Descending sixths (minor = 8, major = 9)
+// - Ascending major sixth = 9
+export function checkForbiddenInterval(
+  prevCP: string,
+  currCP: string
+): { passed: boolean; message: string } {
+  const prevNum = noteToNumber(prevCP);
+  const currNum = noteToNumber(currCP);
+  const interval = Math.abs(currNum - prevNum);
+  const direction = currNum > prevNum ? "ascending" : "descending";
+
+  // Tritone
+  if (interval === 6) {
+    return { passed: false, message: "Forbidden: tritone leap" };
+  }
+
+  // Sevenths
+  if (interval === 10) {
+    return { passed: false, message: "Forbidden: minor 7th leap" };
+  }
+  if (interval === 11) {
+    return { passed: false, message: "Forbidden: major 7th leap" };
+  }
+
+  // Greater than octave
+  if (interval > 12) {
+    return { passed: false, message: `Forbidden: leap greater than octave (${interval} semitones)` };
+  }
+
+  // Descending sixths (both minor and major)
+  if (direction === "descending" && (interval === 8 || interval === 9)) {
+    const sixthType = interval === 8 ? "minor" : "major";
+    return { passed: false, message: `Forbidden: descending ${sixthType} 6th` };
+  }
+
+  // Ascending major sixth
+  if (direction === "ascending" && interval === 9) {
+    return { passed: false, message: "Forbidden: ascending major 6th" };
+  }
+
+  return { passed: true, message: interval <= 2 ? "Stepwise motion" : `Leap of ${getIntervalName(interval)}` };
+}
+
+// Check if a large leap needs recovery (step back into the leap range)
+// Leaps requiring recovery: ascending m6, ascending octave, descending octave
+export function checkLeapRecovery(
+  prevPrevCP: string | null,
+  prevCP: string,
+  currCP: string
+): { passed: boolean; message: string; needsRecovery: boolean } {
+  if (!prevPrevCP) {
+    return { passed: true, message: "No previous leap to recover", needsRecovery: false };
+  }
+
+  const prevPrevNum = noteToNumber(prevPrevCP);
+  const prevNum = noteToNumber(prevCP);
+  const currNum = noteToNumber(currCP);
+
+  const prevInterval = Math.abs(prevNum - prevPrevNum);
+  const prevDirection = prevNum > prevPrevNum ? 1 : -1; // 1 = up, -1 = down
+
+  // Check if previous interval was a leap needing recovery
+  const needsRecoveryUp = prevDirection === 1 && (prevInterval === 8 || prevInterval === 12); // ascending m6 or octave
+  const needsRecoveryDown = prevDirection === -1 && prevInterval === 12; // descending octave
+
+  if (!needsRecoveryUp && !needsRecoveryDown) {
+    return { passed: true, message: "No recovery needed", needsRecovery: false };
+  }
+
+  // Recovery must be a step (1-2 semitones) in opposite direction
+  const currInterval = Math.abs(currNum - prevNum);
+  const currDirection = currNum > prevNum ? 1 : -1;
+  const isStep = currInterval <= 2;
+  const isOppositeDirection = currDirection !== prevDirection;
+
+  if (isStep && isOppositeDirection) {
+    return { passed: true, message: "Leap properly recovered by step", needsRecovery: false };
+  }
+
+  const leapType = needsRecoveryUp
+    ? (prevInterval === 8 ? "ascending minor 6th" : "ascending octave")
+    : "descending octave";
+
+  return {
+    passed: false,
+    message: `Leap recovery needed: ${leapType} must be followed by step in opposite direction`,
+    needsRecovery: true
+  };
+}
+
+// Check for exposed/outlined tritone (run of notes in single direction spanning augmented 4th)
+export function checkExposedTritone(
+  recentPitches: string[],
+  newPitch: string
+): { passed: boolean; message: string } {
+  if (recentPitches.length < 1) {
+    return { passed: true, message: "No tritone outline" };
+  }
+
+  const pitchNums = [...recentPitches.map(p => noteToNumber(p)), noteToNumber(newPitch)];
+
+  // Check last 4 notes for single-direction run that outlines a tritone
+  const checkLength = Math.min(pitchNums.length, 4);
+  const recentNums = pitchNums.slice(-checkLength);
+
+  if (recentNums.length < 2) {
+    return { passed: true, message: "No tritone outline" };
+  }
+
+  // Determine if notes are moving in a single direction
+  let direction: number | null = null;
+  let isSingleDirection = true;
+
+  for (let i = 1; i < recentNums.length; i++) {
+    const currDir = recentNums[i] > recentNums[i - 1] ? 1 : (recentNums[i] < recentNums[i - 1] ? -1 : 0);
+    if (currDir === 0) continue; // Skip repeated notes
+    if (direction === null) {
+      direction = currDir;
+    } else if (currDir !== direction) {
+      isSingleDirection = false;
+      break;
+    }
+  }
+
+  if (!isSingleDirection || direction === null) {
+    return { passed: true, message: "No tritone outline" };
+  }
+
+  // Check if the span of the run is a tritone
+  const first = recentNums[0];
+  const last = recentNums[recentNums.length - 1];
+  const span = Math.abs(last - first);
+
+  if (span === 6) {
+    return { passed: false, message: "Exposed tritone: notes outline augmented 4th" };
+  }
+
+  return { passed: true, message: "No tritone outline" };
+}
+
+// Check for multiple consecutive leaps in the same direction
+export function checkConsecutiveLeapsSameDirection(
+  recentPitches: string[],
+  newPitch: string
+): { passed: boolean; message: string } {
+  if (recentPitches.length < 2) {
+    return { passed: true, message: "Melodic variety" };
+  }
+
+  const pitchNums = [...recentPitches.map(p => noteToNumber(p)), noteToNumber(newPitch)];
+  const recentNums = pitchNums.slice(-4); // Check last 4 notes (3 intervals)
+
+  if (recentNums.length < 3) {
+    return { passed: true, message: "Melodic variety" };
+  }
+
+  // Count consecutive leaps (> 2 semitones) in same direction
+  let consecutiveLeapsSameDir = 0;
+  let lastLeapDir: number | null = null;
+
+  for (let i = 1; i < recentNums.length; i++) {
+    const interval = Math.abs(recentNums[i] - recentNums[i - 1]);
+    const direction = recentNums[i] > recentNums[i - 1] ? 1 : -1;
+
+    if (interval > 2) { // It's a leap
+      if (lastLeapDir === direction) {
+        consecutiveLeapsSameDir++;
+      } else {
+        consecutiveLeapsSameDir = 1;
+        lastLeapDir = direction;
+      }
+    } else {
+      // Step resets the counter
+      consecutiveLeapsSameDir = 0;
+      lastLeapDir = null;
+    }
+  }
+
+  // Fux advises against multiple skips in same direction (though he breaks this sometimes)
+  if (consecutiveLeapsSameDir >= 2) {
+    return {
+      passed: false,
+      message: `Multiple leaps in same direction (${consecutiveLeapsSameDir + 1} consecutive)`
+    };
+  }
+
+  return { passed: true, message: "Melodic variety" };
+}
+
+// Legacy wrapper for backwards compatibility - now checks forbidden intervals
 export function checkStepwiseMotion(
   prevCP: string,
   currCP: string
 ): { passed: boolean; message: string } {
-  const motion = Math.abs(noteToNumber(currCP) - noteToNumber(prevCP));
-
-  if (motion <= 2) {
-    return { passed: true, message: "Stepwise motion" };
-  }
-
-  return { passed: false, message: `Leap of ${motion} semitones` };
+  return checkForbiddenInterval(prevCP, currCP);
 }
 
 export function checkConsonance(
@@ -281,7 +469,8 @@ function scoreCandidate(
   cfPitch: string,
   prevCF: string | null,
   prevCP: string | null,
-  rules: RuleConfig[]
+  rules: RuleConfig[],
+  recentPitches: string[] = []
 ): number {
   let score = 100;
 
@@ -314,11 +503,35 @@ function scoreCandidate(
       score -= contraryWeight * 0.5; // Less penalty for preference rules
     }
 
-    // Check stepwise motion
-    const stepwiseWeight = getRuleWeight(rules, "preferStepwiseMotion");
-    const stepwiseCheck = checkStepwiseMotion(prevCP, candidate);
-    if (!stepwiseCheck.passed) {
-      score -= stepwiseWeight * 0.5;
+    // Check forbidden intervals (replaces old stepwise check)
+    const forbiddenWeight = getRuleWeight(rules, "noForbiddenIntervals");
+    const forbiddenCheck = checkForbiddenInterval(prevCP, candidate);
+    if (!forbiddenCheck.passed) {
+      score -= forbiddenWeight;
+    }
+
+    // Check for repeated notes
+    const repetitionWeight = getRuleWeight(rules, "avoidRepetitions");
+    if (prevCP === candidate) {
+      score -= repetitionWeight;
+    }
+  }
+
+  // Check exposed tritone (needs context of recent pitches)
+  if (recentPitches.length > 0) {
+    const exposedTritoneWeight = getRuleWeight(rules, "noExposedTritone");
+    const tritoneCheck = checkExposedTritone(recentPitches, candidate);
+    if (!tritoneCheck.passed) {
+      score -= exposedTritoneWeight * 0.8;
+    }
+  }
+
+  // Check consecutive leaps in same direction
+  if (recentPitches.length >= 2) {
+    const consecutiveLeapsWeight = getRuleWeight(rules, "avoidConsecutiveLeaps");
+    const leapsCheck = checkConsecutiveLeapsSameDirection(recentPitches, candidate);
+    if (!leapsCheck.passed) {
+      score -= consecutiveLeapsWeight * 0.5;
     }
   }
 
@@ -374,14 +587,26 @@ function analyzeNotePair(
       message: contraryCheck.message,
     });
 
-    const stepwiseRule = rules.find((r) => r.id === "preferStepwiseMotion");
-    const stepwiseCheck = checkStepwiseMotion(prevCP, cpPitch);
+    // Check for forbidden melodic intervals
+    const forbiddenRule = rules.find((r) => r.id === "noForbiddenIntervals");
+    const forbiddenCheck = checkForbiddenInterval(prevCP, cpPitch);
     ruleResults.push({
-      ruleId: "preferStepwiseMotion",
-      ruleName: stepwiseRule?.name || "Stepwise",
-      passed: stepwiseCheck.passed,
-      message: stepwiseCheck.message,
+      ruleId: "noForbiddenIntervals",
+      ruleName: forbiddenRule?.name || "Melodic Motion",
+      passed: forbiddenCheck.passed,
+      message: forbiddenCheck.message,
     });
+
+    // Check for repeated notes
+    if (prevCP === cpPitch) {
+      const repetitionRule = rules.find((r) => r.id === "avoidRepetitions");
+      ruleResults.push({
+        ruleId: "avoidRepetitions",
+        ruleName: repetitionRule?.name || "Avoid Repetitions",
+        passed: false,
+        message: "Repeated note",
+      });
+    }
   }
 
   return {
@@ -1345,7 +1570,7 @@ function analyzeFourthSpeciesMeasure(
   upbeat: string,
   prevUpbeat: string | null,
   isFirstMeasure: boolean,
-  rules: RuleConfig[]
+  _rules: RuleConfig[] // Prefix with underscore to indicate intentionally unused for now
 ): NoteAnalysis[] {
   const analyses: NoteAnalysis[] = [];
 
@@ -1380,12 +1605,7 @@ function analyzeFourthSpeciesMeasure(
       });
     }
 
-    // Check for parallel 5ths/8ves with previous upbeat
-    if (prevUpbeat) {
-      const prevCFIndex = measureIndex - 1;
-      // We'd need previous CF, but for simplicity we'll check upbeat to upbeat
-      // This is checked in the upbeat analysis instead
-    }
+    // Note: Parallel 5ths/8ves are checked in the upbeat analysis section
 
     analyses.push({
       noteIndex: measureIndex * 2,
@@ -1410,15 +1630,27 @@ function analyzeFourthSpeciesMeasure(
       : `Upbeat must be consonant (${getIntervalName(upbeatInterval)})`,
   });
 
-  // Check stepwise motion from downbeat/previous upbeat
-  if (!isFirstMeasure) {
-    const stepCheck = checkStepwiseMotion(downbeat, upbeat);
+  // Check melodic motion from previous upbeat to current upbeat
+  // (This is where the actual melodic line is - tied notes connect the upbeats)
+  if (prevUpbeat) {
+    // Check for forbidden intervals
+    const forbiddenCheck = checkForbiddenInterval(prevUpbeat, upbeat);
     upbeatRules.push({
-      ruleId: "preferStepwiseMotion",
-      ruleName: "Resolution Motion",
-      passed: stepCheck.passed,
-      message: stepCheck.message,
+      ruleId: "noForbiddenIntervals",
+      ruleName: "Melodic Motion",
+      passed: forbiddenCheck.passed,
+      message: forbiddenCheck.message,
     });
+
+    // Check for repeated notes
+    if (prevUpbeat === upbeat) {
+      upbeatRules.push({
+        ruleId: "avoidRepetitions",
+        ruleName: "Avoid Repetitions",
+        passed: false,
+        message: "Repeated note",
+      });
+    }
   }
 
   analyses.push({
@@ -1518,8 +1750,31 @@ export function generateFourthSpecies(
       }
     }
 
-    // Score candidates
-    const scored = candidates.map(c => {
+    // Filter and score candidates using rule weights
+    const forbiddenWeight = getRuleWeight(rules, "noForbiddenIntervals");
+    const leapRecoveryWeight = getRuleWeight(rules, "leapRecovery");
+    const exposedTritoneWeight = getRuleWeight(rules, "noExposedTritone");
+    const consecutiveLeapsWeight = getRuleWeight(rules, "avoidConsecutiveLeaps");
+    const repetitionWeight = getRuleWeight(rules, "avoidRepetitions");
+    const parallelWeight = getRuleWeight(rules, "noParallelFifths");
+
+    // If forbidden intervals weight is 100%, filter them out entirely
+    let filteredCandidates = candidates;
+    if (prevUpbeat && forbiddenWeight === 100) {
+      filteredCandidates = candidates.filter(c => {
+        const check = checkForbiddenInterval(prevUpbeat, c);
+        return check.passed;
+      });
+      // Fall back to all candidates if filtering removes everything
+      if (filteredCandidates.length === 0) {
+        filteredCandidates = candidates;
+      }
+    }
+
+    // Build list of recent upbeats for context-aware checks
+    const recentUpbeats = upbeats.slice(Math.max(0, cfIndex - 3), cfIndex);
+
+    const scored = filteredCandidates.map(c => {
       let score = 100;
       const cNum = noteToNumber(c);
 
@@ -1540,20 +1795,44 @@ export function generateFourthSpecies(
         }
       }
 
-      // Prefer stepwise motion from previous upbeat
       if (prevUpbeat) {
-        const prevNum = noteToNumber(prevUpbeat);
-        const step = Math.abs(cNum - prevNum);
-        if (step <= 2) {
-          score += 15;
-        } else if (step <= 4) {
-          score += 5;
+        // Check for forbidden intervals (penalize if not filtered)
+        if (forbiddenWeight < 100) {
+          const forbiddenCheck = checkForbiddenInterval(prevUpbeat, c);
+          if (!forbiddenCheck.passed) {
+            score -= forbiddenWeight;
+          }
+        }
+
+        // Check leap recovery
+        if (cfIndex >= 2) {
+          const prevPrevUpbeat = upbeats[cfIndex - 2];
+          const recoveryCheck = checkLeapRecovery(prevPrevUpbeat, prevUpbeat, c);
+          if (!recoveryCheck.passed) {
+            score -= leapRecoveryWeight * 0.8;
+          }
+        }
+
+        // Avoid repetition
+        if (c === prevUpbeat) {
+          score -= repetitionWeight;
         }
       }
 
-      // Avoid repetition
-      if (prevUpbeat && c === prevUpbeat) {
-        score -= 30;
+      // Check exposed tritone
+      if (recentUpbeats.length > 0) {
+        const tritoneCheck = checkExposedTritone(recentUpbeats, c);
+        if (!tritoneCheck.passed) {
+          score -= exposedTritoneWeight * 0.8;
+        }
+      }
+
+      // Check consecutive leaps in same direction
+      if (recentUpbeats.length >= 2) {
+        const leapsCheck = checkConsecutiveLeapsSameDirection(recentUpbeats, c);
+        if (!leapsCheck.passed) {
+          score -= consecutiveLeapsWeight * 0.5; // Softer penalty since Fux breaks this sometimes
+        }
       }
 
       // Check for parallel fifths/octaves with previous
@@ -1561,11 +1840,11 @@ export function generateFourthSpecies(
         const prevCF = cantusFirmus[cfIndex - 1].pitch;
         const parallelCheck = checkParallelFifths(prevCF, cfPitch, prevUpbeat, c);
         if (!parallelCheck.passed) {
-          score -= 50;
+          score -= parallelWeight;
         }
       }
 
-      score += Math.random() * 15;
+      score += Math.random() * 10;
       return { pitch: c, score };
     });
 

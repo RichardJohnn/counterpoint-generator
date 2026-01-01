@@ -85,8 +85,13 @@ export type RuleId =
   | "noParallelFifths"
   | "noDirectFifths"
   | "preferContraryMotion"
-  | "preferStepwiseMotion"
+  | "preferStepwiseMotion" // Legacy - now means noForbiddenIntervals
   | "consonantIntervalsOnly"
+  // Melodic rules (Fux)
+  | "noForbiddenIntervals" // tritone, 7ths, >octave, desc 6ths, asc M6
+  | "leapRecovery" // asc m6/oct, desc oct must be followed by step opposite
+  | "noExposedTritone" // notes in same direction shouldn't outline tritone
+  | "avoidConsecutiveLeaps" // avoid multiple leaps in same direction
   // 2nd species specific
   | "downbeatConsonance"
   | "allowPassingTones"
@@ -125,6 +130,40 @@ export interface GenerationAnalysis {
   summary: string;
 }
 
+// Melodic rules common to all species (Fux rules)
+export const MELODIC_RULES: RuleConfig[] = [
+  {
+    id: "noForbiddenIntervals",
+    name: "No Forbidden Intervals",
+    description: "Avoid tritones, 7ths, leaps >octave, descending 6ths, ascending M6",
+    weight: 100,
+  },
+  {
+    id: "leapRecovery",
+    name: "Leap Recovery",
+    description: "Ascending m6/octave and descending octave must be followed by step in opposite direction",
+    weight: 100,
+  },
+  {
+    id: "noExposedTritone",
+    name: "No Exposed Tritone",
+    description: "Notes moving in same direction should not outline a tritone",
+    weight: 100,
+  },
+  {
+    id: "avoidConsecutiveLeaps",
+    name: "Avoid Consecutive Leaps",
+    description: "Avoid multiple leaps in the same direction",
+    weight: 60,
+  },
+  {
+    id: "avoidRepetitions",
+    name: "Avoid Repetitions",
+    description: "Avoid repeating the same note",
+    weight: 50,
+  },
+];
+
 // 1st Species rules
 export const FIRST_SPECIES_RULES: RuleConfig[] = [
   {
@@ -146,17 +185,13 @@ export const FIRST_SPECIES_RULES: RuleConfig[] = [
     weight: 60,
   },
   {
-    id: "preferStepwiseMotion",
-    name: "Prefer Stepwise Motion",
-    description: "Counterpoint should move by step when possible",
-    weight: 50,
-  },
-  {
     id: "consonantIntervalsOnly",
     name: "Consonant Intervals",
     description: "Use only consonant intervals (3rds, 5ths, 6ths, 8ves)",
     weight: 100,
   },
+  // Include melodic rules
+  ...MELODIC_RULES,
 ];
 
 // 2nd Species rules (includes all 1st species rules plus new ones)
@@ -190,7 +225,7 @@ export const SECOND_SPECIES_RULES: RuleConfig[] = [
 
 // 3rd Species rules (4 quarter notes against each whole note)
 export const THIRD_SPECIES_RULES: RuleConfig[] = [
-  // Core 1st species rules still apply (adjusted for 3rd species context)
+  // Core harmonic rules (adjusted for 3rd species context)
   {
     id: "noParallelFifths",
     name: "No Parallel 5ths/8ves on Beat 1",
@@ -208,12 +243,6 @@ export const THIRD_SPECIES_RULES: RuleConfig[] = [
     name: "Prefer Contrary Motion",
     description: "Voices should move in opposite directions",
     weight: 60,
-  },
-  {
-    id: "preferStepwiseMotion",
-    name: "Prefer Stepwise Motion",
-    description: "Counterpoint should move by step when possible",
-    weight: 70,
   },
   // 3rd species specific rules
   {
@@ -240,11 +269,13 @@ export const THIRD_SPECIES_RULES: RuleConfig[] = [
     description: "Second-to-last measure: M6→P8 (CF below) or m3→P1 (CF above)",
     weight: 90,
   },
+  // Melodic rules
+  ...MELODIC_RULES,
 ];
 
 // 4th Species rules (syncopated half notes with suspensions)
 export const FOURTH_SPECIES_RULES: RuleConfig[] = [
-  // Core rules
+  // Core harmonic rules
   {
     id: "noParallelFifths",
     name: "No Parallel 5ths/8ves",
@@ -263,12 +294,6 @@ export const FOURTH_SPECIES_RULES: RuleConfig[] = [
     description: "Voices should move in opposite directions",
     weight: 60,
   },
-  {
-    id: "preferStepwiseMotion",
-    name: "Prefer Stepwise Motion",
-    description: "Counterpoint should move by step when possible",
-    weight: 70,
-  },
   // 4th species specific rules
   {
     id: "upbeatConsonance",
@@ -282,12 +307,8 @@ export const FOURTH_SPECIES_RULES: RuleConfig[] = [
     description: "Dissonances on downbeat must resolve down by step",
     weight: 100,
   },
-  {
-    id: "avoidRepetitions",
-    name: "Avoid Repetitions",
-    description: "Avoid repeating the same pitch pattern",
-    weight: 50,
-  },
+  // Melodic rules (avoidRepetitions is already in MELODIC_RULES)
+  ...MELODIC_RULES,
 ];
 
 // Helper to get rules by species
